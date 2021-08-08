@@ -1,3 +1,4 @@
+/* eslint-disable eqeqeq */
 import Colors from '../../utils/colors';
 import {
   widthPercentageToDP as wp,
@@ -14,7 +15,6 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS == 'ios' ? hp('10%') : null,
     backgroundColor: Colors.black,
   },
-
   title: {
     color: Colors.orange,
     fontWeight: 'bold',
@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
     height: hp('6%'),
     marginLeft: 'auto',
     marginRight: 'auto',
-    marginTop: hp('10%'),
+    marginTop: hp('5%'),
   },
   txtBtn: {
     fontSize: 16,
@@ -54,10 +54,7 @@ const styles = StyleSheet.create({
     marginTop: hp('5%'),
   },
   editImg: {
-    width: wp('90%'),
-    height: hp('40%'),
-    borderRadius: 5,
-    marginTop: hp('5%'),
+    height: hp('90%'),
   },
 });
 

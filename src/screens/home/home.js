@@ -1,8 +1,15 @@
+/* eslint-disable react-native/no-inline-styles */
+/* eslint-disable eqeqeq */
+/* eslint-disable react/no-did-mount-set-state */
 import React, {Component} from 'react';
 import {View, Image, Text, TouchableOpacity, ScrollView} from 'react-native';
 import styles from './style';
 import ImagePicker from 'react-native-image-crop-picker';
 import ActionSheet from 'react-native-actionsheet';
+import AsyncStorage from '@react-native-community/async-storage';
+import {heightPercentageToDP as hp} from 'react-native-responsive-screen';
+import {Title, Description, TxtBtn, TxtBtnEdit} from '../../utils/constance';
+import {PESDK} from 'react-native-photoeditorsdk';
 
 class Home extends Component {
   constructor(props) {
@@ -11,29 +18,40 @@ class Home extends Component {
       email: '',
       password: '',
       img: [],
-      fileList: [],
+      editedImg: '',
       path: '',
       check: false,
+      selectedImg: [],
     };
   }
 
-  _on_selectImg_camera = image => {
-    let newDataImg = this.state.fileList;
-    const source = {uri: image.path};
-    let item = {
-      id: Date.now(),
-      url: source,
-      content: image.data,
-    };
+  async componentDidMount() {
+    let images = await AsyncStorage.getItem('IMG');
+    if (images != null) {
+      this.setState({
+        selectedImg: images,
+        check: true,
+      });
+    }
+  }
 
-    newDataImg.push(item);
+  _on_selectImg = async image => {
+    this.state.img.push(image.path);
+    AsyncStorage.setItem('IMG', image.path);
     this.setState({
-      fileList: newDataImg,
-      path: item.content,
+      selectedImg: image.path,
     });
+  };
 
-    this.state.img.push(item.url);
-    console.log(this.state.img);
+  _editPhoto = imageUri => {
+    PESDK.openEditor({uri: imageUri}).then(res => {
+      console.log(res);
+      AsyncStorage.setItem('IMG', res.image);
+      this.setState({
+        selectedImg: res.image,
+        editedImg: res.image,
+      });
+    });
   };
 
   _take_img_camera = () => {
@@ -44,7 +62,7 @@ class Home extends Component {
       includeBase64: true,
       cropping: true,
     }).then(image => {
-      this._on_selectImg_camera(image);
+      this._on_selectImg(image);
     });
   };
 
@@ -55,7 +73,6 @@ class Home extends Component {
       compressImageQuality: 0.7,
       includeBase64: true,
       cropping: true,
-      multiple: true,
     }).then(image => {
       this._on_selectImg(image);
     });
@@ -65,42 +82,44 @@ class Home extends Component {
     this.ActionSheet.show();
   };
 
-  _on_selectImg = image => {
-    for (var i = 0; i < image.length; i++) {
-      this.state.img.push({uri: image[i].path});
-    }
-
-    // console.log(`${JSON.stringify(this.state.img[0].uri)}`);
-    // alert( JSON.stringify( this.state.img[0].uri ))
-    if (this.state.img) {
-      //   AsyncStorage.setItem('IMG', JSON.stringify(this.state.img[0].uri));
-      this.setState({
-        check: true,
-      });
-    }
-  };
-
   render() {
     return (
       <View style={styles.container}>
         <ScrollView>
-          <Text style={styles.title}>Image Editor : </Text>
-          <Text style={styles.desc}>
-            You can choose your photos from the gallery or take pictures by
-            opening the camera, then you can edit them and create your own
-            gallery.{' '}
-          </Text>
+          <Text style={styles.title}>{Title}</Text>
+          <Text style={styles.desc}>{Description}</Text>
 
           <Image
-            source={require('../../assets/images/img1.jpg')}
+            source={require('../../assets/images/home.jpg')}
             style={styles.img}
           />
 
           <TouchableOpacity
             style={styles.btn}
             onPress={() => this._On_addImg()}>
-            <Text style={styles.txtBtn}>Select your images</Text>
+            <Text style={styles.txtBtn}>{TxtBtn}</Text>
           </TouchableOpacity>
+
+          {this.state.selectedImg != '' ? (
+            <TouchableOpacity
+              style={[styles.btn, {marginBottom: hp('2%')}]}
+              onPress={() => this._editPhoto(this.state.selectedImg)}>
+              <Text style={styles.txtBtn}>{TxtBtnEdit}</Text>
+            </TouchableOpacity>
+          ) : null}
+
+          <Image
+            resizeMode="center"
+            source={
+              this.state.selectedImg == ''
+                ? {uri: ''}
+                : {uri: this.state.selectedImg.toString()}
+            }
+            style={{
+              height: this.state.selectedImg == '' ? 0 : 300,
+              width: this.state.selectedImg == '' ? 0 : '100%',
+            }}
+          />
 
           <ActionSheet
             ref={o => (this.ActionSheet = o)}
